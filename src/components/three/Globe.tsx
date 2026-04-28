@@ -537,7 +537,7 @@ function MobileWorldMap({ onSelect }: { onSelect: (city: City) => void }) {
       }
       return { id: country.id, d: segs.join(" ") };
     }),
-  [countryFeatures]); 
+  [countryFeatures, ringToD]); 
 
   // Защита: убедись, что home город всегда существует, иначе приложение упадет
   const home = CITIES.find((c) => c.home);
