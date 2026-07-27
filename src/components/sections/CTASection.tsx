@@ -1,15 +1,73 @@
 "use client";
 
 import * as React from "react";
+import { Phone, Send, User } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { gsap, ScrollTrigger } from "@/lib/gsap";
+import { useLocale, type Locale } from "@/hooks/useLocale";
+
+function formatPhoneInput(value: string) {
+  const trimmed = value.trimStart();
+  return trimmed.startsWith("+") ? trimmed : `+${trimmed.replace(/^\+/, "")}`;
+}
+
+const copy: Record<Locale, {
+  title: string;
+  subtitle: string;
+  name: string;
+  phone: string;
+  submit: string;
+  error: string;
+  message: string;
+  messageName: string;
+  messagePhone: string;
+}> = {
+  uz: {
+    title: "Hayotingizni o'zgartirishga tayyormisiz?",
+    subtitle: "Kontaktlaringizni qoldiring - konsultant qabul bo'yicha savolingizga javob beradi.",
+    name: "Ismingiz",
+    phone: "Telefon raqami",
+    submit: "Savol berish",
+    error: "Ism va telefon raqamini kiriting",
+    message: "Assalomu alaykum! O'qishga kirish bo'yicha savol bermoqchiman.",
+    messageName: "Ism",
+    messagePhone: "Telefon",
+  },
+  ru: {
+    title: "Готов изменить свою жизнь?",
+    subtitle: "Оставь контакты — консультант ответит на вопрос по поступлению.",
+    name: "Ваше имя",
+    phone: "Номер телефона",
+    submit: "Задать вопрос",
+    error: "Введите имя и номер телефона",
+    message: "Здравствуйте! Хочу задать вопрос по поступлению.",
+    messageName: "Имя",
+    messagePhone: "Телефон",
+  },
+  en: {
+    title: "Ready to change your future?",
+    subtitle: "Leave your contacts and a consultant will answer your admission question.",
+    name: "Your name",
+    phone: "Phone number",
+    submit: "Ask a question",
+    error: "Enter your name and phone number",
+    message: "Hello! I want to ask a question about admission.",
+    messageName: "Name",
+    messagePhone: "Phone",
+  },
+};
 
 export function CTASection() {
+  const locale = useLocale();
+  const t = copy[locale];
   const sectionRef = React.useRef<HTMLElement | null>(null);
   const headingRef = React.useRef<HTMLHeadingElement | null>(null);
   const subtitleRef = React.useRef<HTMLParagraphElement | null>(null);
-  const buttonRef = React.useRef<HTMLButtonElement | null>(null);
+  const formRef = React.useRef<HTMLFormElement | null>(null);
   const [isMobile, setIsMobile] = React.useState(false);
+  const [name, setName] = React.useState("");
+  const [phone, setPhone] = React.useState("+998 ");
+  const [error, setError] = React.useState("");
 
   React.useEffect(() => {
     const media = window.matchMedia("(max-width: 767px)");
@@ -20,17 +78,17 @@ export function CTASection() {
   }, []);
 
   React.useEffect(() => {
-    if (!sectionRef.current || !headingRef.current || !subtitleRef.current || !buttonRef.current) return;
+    if (!sectionRef.current || !headingRef.current || !subtitleRef.current || !formRef.current) return;
     const section = sectionRef.current;
     const heading = headingRef.current;
     const subtitle = subtitleRef.current;
-    const button = buttonRef.current;
+    const form = formRef.current;
 
     const ctx = gsap.context(() => {
       if (isMobile) {
         gsap.set(section, { backgroundColor: "#FF8225" });
         gsap.fromTo(
-          [heading, subtitle, button],
+          [heading, subtitle, form],
           { opacity: 0, y: 16 },
           {
             opacity: 1,
@@ -94,7 +152,7 @@ export function CTASection() {
         }
       );
       gsap.fromTo(
-        button,
+        form,
         { opacity: 0, y: -100, scale: 0.96 },
         {
           opacity: 1,
@@ -115,8 +173,23 @@ export function CTASection() {
     return () => ctx.revert();
   }, [isMobile]);
 
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!name.trim() || phone.replace(/\D/g, "").length < 9) {
+      setError(t.error);
+      return;
+    }
+
+    setError("");
+    const message = encodeURIComponent(
+      `${t.message} ${t.messageName}: ${name.trim()}. ${t.messagePhone}: ${phone}`
+    );
+    window.open(`https://wa.me/998939492000?text=${message}`, "_blank", "noopener,noreferrer");
+  }
+
   return (
-    <section ref={sectionRef} className="relative w-full overflow-hidden py-20 lg:py-24">
+    <section id="contact-form" ref={sectionRef} className="relative w-full scroll-mt-24 overflow-hidden py-20 lg:py-24">
       <div className="cta-float-circle absolute -left-20 top-8 h-[220px] w-[220px] rounded-full bg-[#FFA54D] opacity-15" />
       <div className="cta-float-circle absolute right-[-90px] top-12 h-[340px] w-[340px] rounded-full bg-[#FFA54D] opacity-15 [animation-delay:1.2s]" />
       <div className="cta-float-circle absolute left-1/3 bottom-[-140px] h-[280px] w-[280px] rounded-full bg-[#FFA54D] opacity-15 [animation-delay:2.3s]" />
@@ -125,17 +198,54 @@ export function CTASection() {
       <Container className="relative z-10">
         <div className="mx-auto max-w-2xl text-center">
           <h2 ref={headingRef} className="text-white text-4xl lg:text-5xl font-extrabold tracking-tight">
-            Готов изменить свою жизнь?
+            {t.title}
           </h2>
           <p ref={subtitleRef} className="text-white/85 text-lg mt-6 font-medium">
-            Получи бесплатную консультацию за 5 минут
+            {t.subtitle}
           </p>
-          <button
-            ref={buttonRef}
-            className="mt-10 rounded-pill bg-white px-8 py-4 font-bold text-brand transition-all duration-300 hover:scale-105 hover:text-[#d66c1f] hover:shadow-[0_16px_48px_rgba(26,17,8,0.2)]"
+          <form
+            ref={formRef}
+            onSubmit={handleSubmit}
+            className="mx-auto mt-10 grid w-full max-w-3xl grid-cols-1 gap-3 rounded-2xl bg-white p-3 text-left shadow-[0_16px_48px_rgba(26,17,8,0.2)] md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]"
           >
-            Начать сейчас &rarr;
-          </button>
+            <label className="flex min-h-14 items-center rounded-xl border border-neutral-200 bg-neutral-50 px-4 focus-within:border-brand focus-within:bg-white">
+              <User className="mr-3 h-4 w-4 shrink-0 text-brand" />
+              <span className="sr-only">{t.name}</span>
+              <input
+                value={name}
+                onChange={(event) => {
+                  setName(event.target.value);
+                  if (error) setError("");
+                }}
+                placeholder={t.name}
+                className="min-w-0 flex-1 bg-transparent text-base font-semibold text-primary outline-none placeholder:text-secondary/70"
+              />
+            </label>
+            <label className="flex min-h-14 items-center rounded-xl border border-neutral-200 bg-neutral-50 px-4 focus-within:border-brand focus-within:bg-white">
+              <Phone className="mr-3 h-4 w-4 shrink-0 text-brand" />
+              <span className="sr-only">{t.phone}</span>
+              <input
+                type="tel"
+                inputMode="tel"
+                value={phone}
+                onChange={(event) => {
+                  setPhone(formatPhoneInput(event.target.value));
+                  if (error) setError("");
+                }}
+                placeholder="+998 90 123 45 67"
+                className="min-w-0 flex-1 bg-transparent text-base font-semibold text-primary outline-none placeholder:text-secondary/70"
+                aria-invalid={Boolean(error)}
+              />
+            </label>
+            <button
+              type="submit"
+              className="inline-flex min-h-14 items-center justify-center gap-2 rounded-xl bg-brand px-6 text-base font-extrabold text-white transition-colors hover:bg-brand-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+            >
+              <Send className="h-4 w-4" />
+              {t.submit}
+            </button>
+            {error ? <p className="px-1 text-sm font-semibold text-red-600 md:col-span-3">{error}</p> : null}
+          </form>
         </div>
       </Container>
     </section>

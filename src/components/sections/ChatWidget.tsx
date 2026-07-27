@@ -4,6 +4,7 @@ import * as React from "react";
 import { MessageCircle, X, Send } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useLocale, type Locale } from "@/hooks/useLocale";
 
 interface Message {
   id: string;
@@ -12,23 +13,100 @@ interface Message {
   from?: "left" | "right";
 }
 
-const CANNED_RESPONSES: Record<string, string> = {
-  "Стоимость в Корее": "Обучение в Южной Корее начинается от $3,000 в год. Также есть стипендия GKS, покрывающая 100% расходов. Хотите узнать подробнее?",
-  "Документы": "Базовый пакет: аттестат/диплом, транскрипт оценок, мотивационное письмо, рекомендации и сертификат языка (IELTS/TOEFL/Topic). Мы помогаем собрать всё под ключ!",
-  "Стипендии": "Многие страны предлагают гранты! Например, Турция (Turkiye Burslari) и Германия (DAAD). Для получения гранта важен высокий средний балл и сильное мотивационное письмо.",
-  "Без IELTS": "Без IELTS можно поступить в Малайзию (пройти внутренний тест) или выбрать страны с обучением на местном языке (Турция, Корея), предварительно пройдя языковые курсы."
+type SuggestionKey = "koreaCost" | "documents" | "scholarships" | "noIelts";
+
+const chatCopy: Record<Locale, {
+  tooltip: string;
+  title: string;
+  close: string;
+  placeholder: string;
+  initial: string;
+  fallback: string;
+  suggestions: Record<SuggestionKey, string>;
+  responses: Record<SuggestionKey, string>;
+}> = {
+  uz: {
+    tooltip: "Salom! Yordam kerakmi?",
+    title: "Studify AI konsultanti",
+    close: "Chatni yopish",
+    placeholder: "Xabar yozing...",
+    initial: "Salom! Men Studify AI konsultantiman. Universitet tanlash, davlatlar va narxlar bo'yicha yordam beraman. Nimani bilmoqchisiz?",
+    fallback: "Savolingiz uchun rahmat! Menejerimiz tez orada siz bilan bog'lanadi. Hozircha davlat tanlash uchun quizdan o'tishingiz mumkin.",
+    suggestions: {
+      koreaCost: "Koreyada narxlar",
+      documents: "Hujjatlar",
+      scholarships: "Stipendiyalar",
+      noIelts: "IELTSsiz",
+    },
+    responses: {
+      koreaCost: "Janubiy Koreyada ta'lim yiliga $3,000 dan boshlanadi. Xarajatlarni 100% gacha qoplaydigan GKS stipendiyasi ham bor.",
+      documents: "Asosiy paket: attestat/diplom, baholar transkripti, motivatsion xat, tavsiyalar va til sertifikati. Hujjatlarni kalit topshirishgacha tayyorlaymiz.",
+      scholarships: "Ko'p davlatlarda grantlar bor: masalan, Turkiya Burslari va Germaniyada DAAD. Grant uchun yuqori GPA va kuchli motivatsion xat muhim.",
+      noIelts: "IELTSsiz Malayziyaga ichki test orqali yoki Turkiya/Koreya kabi mahalliy tilda o'qitiladigan yo'nalishlarga kirish mumkin.",
+    },
+  },
+  ru: {
+    tooltip: "Привет! Нужна помощь?",
+    title: "AI-Консультант Studify",
+    close: "Закрыть чат",
+    placeholder: "Напишите сообщение...",
+    initial: "Привет! Я AI-консультант Studify. Помогу подобрать университет, расскажу про страны и стоимость. О чём хочешь узнать?",
+    fallback: "Спасибо за вопрос! Наш менеджер скоро свяжется с вами, чтобы обсудить это подробнее. Пока можете пройти Quiz для подбора страны.",
+    suggestions: {
+      koreaCost: "Стоимость в Корее",
+      documents: "Документы",
+      scholarships: "Стипендии",
+      noIelts: "Без IELTS",
+    },
+    responses: {
+      koreaCost: "Обучение в Южной Корее начинается от $3,000 в год. Также есть стипендия GKS, покрывающая до 100% расходов.",
+      documents: "Базовый пакет: аттестат/диплом, транскрипт оценок, мотивационное письмо, рекомендации и сертификат языка. Мы помогаем собрать всё под ключ.",
+      scholarships: "Многие страны предлагают гранты: например, Turkiye Burslari и DAAD в Германии. Для гранта важен высокий средний балл и сильное мотивационное письмо.",
+      noIelts: "Без IELTS можно поступить в Малайзию через внутренний тест или выбрать страны с обучением на местном языке, например Турцию или Корею.",
+    },
+  },
+  en: {
+    tooltip: "Hi! Need help?",
+    title: "Studify AI Consultant",
+    close: "Close chat",
+    placeholder: "Write a message...",
+    initial: "Hi! I am the Studify AI consultant. I can help choose a university and explain countries and costs. What would you like to know?",
+    fallback: "Thanks for the question. Our manager will contact you soon to discuss it. You can also take the quiz to choose a country.",
+    suggestions: {
+      koreaCost: "Cost in Korea",
+      documents: "Documents",
+      scholarships: "Scholarships",
+      noIelts: "No IELTS",
+    },
+    responses: {
+      koreaCost: "Study in South Korea starts from $3,000 per year. The GKS scholarship can cover up to 100% of costs.",
+      documents: "The basic package includes certificate/diploma, transcript, motivation letter, recommendations and a language certificate. We prepare it end to end.",
+      scholarships: "Many countries offer grants, including Turkiye Burslari and DAAD in Germany. Strong GPA and a clear motivation letter matter most.",
+      noIelts: "Without IELTS, you can consider Malaysia with an internal test or countries with local-language tracks, such as Turkey or Korea.",
+    },
+  },
 };
 
+const DEFAULT_SUGGESTIONS: SuggestionKey[] = ["koreaCost", "documents", "scholarships", "noIelts"];
+
+function getSuggestionKey(text: string, locale: Locale): SuggestionKey | null {
+  const clean = text.trim();
+  const found = DEFAULT_SUGGESTIONS.find((key) => chatCopy[locale].suggestions[key] === clean);
+  return found ?? null;
+}
+
 export function ChatWidget() {
+  const locale = useLocale();
+  const t = chatCopy[locale];
   const [isOpen, setIsOpen] = React.useState(false);
   const [showTooltip, setShowTooltip] = React.useState(false);
   const [isThinking, setIsThinking] = React.useState(false);
-  const [suggestions, setSuggestions] = React.useState<string[]>(Object.keys(CANNED_RESPONSES));
+  const [suggestions, setSuggestions] = React.useState<SuggestionKey[]>(DEFAULT_SUGGESTIONS);
   const [messages, setMessages] = React.useState<Message[]>([
     {
       id: "init",
       isBot: true,
-      text: "Привет! 👋 Я AI-консультант Studify. Помогу подобрать университет, расскажу про страны и стоимость. О чём хочешь узнать?",
+      text: chatCopy.uz.initial,
       from: "left",
     }
   ]);
@@ -42,6 +120,13 @@ export function ChatWidget() {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages, isOpen]);
+
+  React.useEffect(() => {
+    setMessages((prev) => {
+      if (prev.length !== 1 || prev[0].id !== "init") return prev;
+      return [{ ...prev[0], text: t.initial }];
+    });
+  }, [t.initial]);
 
   React.useEffect(() => {
     tooltipTimerRef.current = window.setTimeout(() => {
@@ -58,19 +143,20 @@ export function ChatWidget() {
   }, []);
 
   const updateSuggestions = React.useCallback((source: string) => {
-    if (source.includes("Коре")) {
-      setSuggestions(["Стоимость в Корее", "Стипендии", "Документы"]);
+    const normalized = source.toLowerCase();
+    if (normalized.includes("коре") || normalized.includes("korea") || normalized.includes("koreya")) {
+      setSuggestions(["koreaCost", "scholarships", "documents"]);
       return;
     }
-    if (source.includes("Документ")) {
-      setSuggestions(["Документы", "Без IELTS", "Стипендии"]);
+    if (normalized.includes("документ") || normalized.includes("hujjat") || normalized.includes("document")) {
+      setSuggestions(["documents", "noIelts", "scholarships"]);
       return;
     }
-    if (source.includes("Стипенд")) {
-      setSuggestions(["Стипендии", "Стоимость в Корее", "Без IELTS"]);
+    if (normalized.includes("стипенд") || normalized.includes("grant") || normalized.includes("scholar") || normalized.includes("stipend")) {
+      setSuggestions(["scholarships", "koreaCost", "noIelts"]);
       return;
     }
-    setSuggestions(["Стоимость в Корее", "Документы", "Стипендии", "Без IELTS"]);
+    setSuggestions(DEFAULT_SUGGESTIONS);
   }, []);
 
   const handleSend = (text: string) => {
@@ -84,7 +170,8 @@ export function ChatWidget() {
     setIsThinking(true);
 
     setTimeout(() => {
-      const responseText = CANNED_RESPONSES[clean] || "Спасибо за вопрос! Наш менеджер скоро свяжется с вами, чтобы обсудить это подробнее. Пока можете пройти наш Quiz для подбора страны!";
+      const key = getSuggestionKey(clean, locale);
+      const responseText = key ? t.responses[key] : t.fallback;
       setIsThinking(false);
       setMessages((prev) => [
         ...prev,
@@ -106,7 +193,7 @@ export function ChatWidget() {
               transition={{ duration: 0.22 }}
               className="absolute bottom-[72px] right-0 max-w-[180px] rounded-xl bg-white px-3 py-2 text-xs font-semibold text-primary shadow-[0_10px_24px_rgba(26,17,8,0.16)]"
             >
-              Привет! Нужна помощь?
+              {t.tooltip}
               <span className="absolute -bottom-2 right-5 h-0 w-0 border-l-[8px] border-r-[8px] border-t-[8px] border-l-transparent border-r-transparent border-t-white" />
             </motion.div>
           )}
@@ -148,14 +235,14 @@ export function ChatWidget() {
                 <div className="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-emerald-400 border-[2.5px] border-white animate-pulse" />
               </div>
               <div>
-                <h3 className="font-bold text-primary text-sm tracking-tight">AI-Консультант Studify</h3>
+                <h3 className="font-bold text-primary text-sm tracking-tight">{t.title}</h3>
                 <p className="text-xs text-secondary font-medium">Online</p>
               </div>
               </div>
               <button
                 onClick={() => setIsOpen(false)}
                 className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 text-secondary transition-colors hover:border-brand hover:text-brand"
-                aria-label="Закрыть чат"
+                aria-label={t.close}
               >
                 <X className="h-4 w-4" />
               </button>
@@ -201,10 +288,10 @@ export function ChatWidget() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
                     transition={{ duration: 0.2, delay: index * 0.05 }}
-                  onClick={() => handleSend(chip)}
+                  onClick={() => handleSend(t.suggestions[chip])}
                   className="text-xs font-semibold px-3 py-2 rounded-full bg-brand-light text-brand hover:bg-brand hover:text-white transition-colors border border-brand/10"
                 >
-                  {chip}
+                  {t.suggestions[chip]}
                   </motion.button>
                 ))}
               </AnimatePresence>
@@ -214,7 +301,7 @@ export function ChatWidget() {
             <div className="px-5 py-4 border-t border-gray-100 bg-white flex gap-3 items-center">
               <input
                 type="text"
-                placeholder="Напишите сообщение..."
+                placeholder={t.placeholder}
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSend(inputValue)}

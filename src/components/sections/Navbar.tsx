@@ -2,419 +2,291 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Menu, Search, X, ChevronRight, FileText, Globe, MessageCircle } from "lucide-react";
-import { Button } from "@/components/ui/Button";
+import { ArrowUpRight, Menu, X } from "lucide-react";
+import { BrandLogo } from "@/components/brand/BrandLogo";
+import { buttonVariants } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 import { cn } from "@/lib/utils";
-import { gsap } from "@/lib/gsap";
-import { usePathname } from "next/navigation";
+import { useLocale, type Locale } from "@/hooks/useLocale";
+import { usePathname, useRouter } from "next/navigation";
 
+const navLinks = [
+  { key: "countries", href: "/countries", sectionId: "countries" },
+  { key: "process", href: "/how-it-works", sectionId: "how-it-works" },
+  { key: "matching", href: "/quiz", sectionId: "quiz-section" },
+  { key: "about", href: "/about", sectionId: "about" },
+  { key: "pricing", href: "/pricing", sectionId: "pricing" },
+  { key: "blog", href: "/blog", sectionId: "blog" },
+] as const;
 
-const SEARCH_INDEX = [
-  {
-    id: "s1",
-    title: "Обучение в США",
-    description: "Университеты, визы и гранты в Америке",
-    href: "/#countries",
-    keywords: ["сша", "америка", "usa", "штаты", "нью йорк", "гарвард", "учеба в сша"],
-    icon: Globe,
+const labels: Record<Locale, Record<string, string>> = {
+  uz: {
+    countries: "Davlatlar",
+    process: "Jarayon",
+    matching: "Tanlash",
+    about: "Biz haqimizda",
+    pricing: "Narxlar",
+    blog: "Blog",
+    contact: "Bog'lanish",
   },
-  {
-    id: "s2",
-    title: "Обучение в Великобритании",
-    description: "Топовые вузы Лондона и Англии",
-    href: "/#countries",
-    keywords: ["англия", "великобритания", "лондон", "uk", "британский", "оксфорд"],
-    icon: Globe,
+  ru: {
+    countries: "Страны",
+    process: "Процесс",
+    matching: "Подбор",
+    about: "Про нас",
+    pricing: "Прайс",
+    blog: "Блог",
+    contact: "Связаться",
   },
-  {
-    id: "s3",
-    title: "Подбор программы (Квиз)",
-    description: "Пройди тест и узнай куда поступить",
-    href: "/quiz",
-    keywords: ["квиз", "тест", "подбор", "программа", "куда поступить", "найти вуз", "выбор"],
-    icon: FileText,
+  en: {
+    countries: "Countries",
+    process: "Process",
+    matching: "Match",
+    about: "About",
+    pricing: "Pricing",
+    blog: "Blog",
+    contact: "Contact",
   },
-  {
-    id: "s4",
-    title: "Отзывы студентов",
-    description: "Истории успеха наших учеников",
-    href: "/reviews",
-    keywords: ["отзывы", "истории", "студенты", "мнения", "результаты", "кейс", "опыт"],
-    icon: MessageCircle,
-  },
-  {
-    id: "s5",
-    title: "Как это работает",
-    description: "Процесс поступления шаг за шагом",
-    href: "/#how-it-works",
-    keywords: ["процесс", "шаги", "поступление", "инструкция", "этапы", "как начать"],
-    icon: FileText,
-  },
-  {
-    id: "s6",
-    title: "Контакты",
-    description: "Свяжитесь с нами для консультации",
-    href: "/#footer",
-    keywords: ["контакты", "связь", "телефон", "адрес", "написать", "позвонить", "поддержка"],
-    icon: MessageCircle,
-  },
+};
+
+const localeOptions: Array<{ value: Locale; label: string }> = [
+  { value: "uz", label: "UZ" },
+  { value: "ru", label: "RU" },
+  { value: "en", label: "EN" },
 ];
 
 export function Navbar() {
   const [scrolled, setScrolled] = React.useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
-  const [query, setQuery] = React.useState("");
-  const [searchOpen, setSearchOpen] = React.useState(false);
-  const [language, setLanguage] = React.useState<"ru" | "uz">("ru");
   const [scrollProgress, setScrollProgress] = React.useState(0);
-  const [activeSection, setActiveSection] = React.useState<string>("");
-  
+  const [activeSection, setActiveSection] = React.useState("");
+  const [selectedLocale, setSelectedLocale] = React.useState<Locale>("uz");
+  const locale = useLocale();
   const pathname = usePathname();
-  const mobileLinkRefs = React.useRef<Array<HTMLAnchorElement | null>>([]);
-  const desktopSearchRef = React.useRef<HTMLDivElement>(null);
-
-  // --- Логика поиска ---
-  const searchResults = React.useMemo(() => {
-    if (!query.trim()) return [];
-    const q = query.toLowerCase().trim();
-    return SEARCH_INDEX.filter((item) => {
-      const matchTitle = item.title.toLowerCase().includes(q);
-      const matchDesc = item.description.toLowerCase().includes(q);
-      const matchKeywords = item.keywords.some((kw) => kw.toLowerCase().includes(q));
-      return matchTitle || matchDesc || matchKeywords;
-    });
-  }, [query]);
-
-  React.useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (desktopSearchRef.current && !desktopSearchRef.current.contains(event.target as Node)) {
-        setSearchOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  const router = useRouter();
 
   React.useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 80);
+      setScrolled(window.scrollY > 60);
       const doc = document.documentElement;
       const scrollable = Math.max(1, doc.scrollHeight - window.innerHeight);
       setScrollProgress((window.scrollY / scrollable) * 100);
     };
+
     handleScroll();
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  React.useEffect(() => setSelectedLocale(locale), [locale]);
+
+  function changeLocale(nextLocale: Locale) {
+    setSelectedLocale(nextLocale);
+    window.localStorage.setItem("studify-locale", nextLocale);
+    document.documentElement.lang = nextLocale;
+    const segments = pathname.split("/").filter(Boolean);
+    const currentLocale = segments[0];
+    const pathWithoutLocale = currentLocale === "uz" || currentLocale === "ru" || currentLocale === "en"
+      ? segments.slice(1)
+      : segments;
+    router.push(`/${[nextLocale, ...pathWithoutLocale].join("/")}`);
+  }
+
   React.useEffect(() => {
-    if (pathname.startsWith("/#countries")) { setActiveSection("countries"); return; }
-    if (pathname.startsWith("/reviews")) { setActiveSection("testimonials"); return; }
-    if (pathname === "/quiz") { setActiveSection("quiz"); return; }
+    const segments = pathname.split("/").filter(Boolean);
+    const routePath = segments[0] === "uz" || segments[0] === "ru" || segments[0] === "en"
+      ? `/${segments.slice(1).join("/")}`
+      : pathname;
 
-    if (pathname === "/") {
-      const sectionIds = ["countries", "how-it-works", "testimonials", "footer"];
-      const elements = sectionIds
-        .map((id) => ({ id, el: document.getElementById(id) }))
-        .filter((item): item is { id: string; el: HTMLElement } => Boolean(item.el));
-      
-      if (!elements.length) return;
-
-      const observer = new IntersectionObserver(
-        (entries) => {
-          const visible = entries
-            .filter((entry) => entry.isIntersecting)
-            .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-          if (!visible) return;
-          const id = (visible.target as HTMLElement).id;
-          if (id) setActiveSection(id);
-        },
-        { root: null, rootMargin: "-40% 0px -45% 0px", threshold: [0.2, 0.45, 0.7] }
-      );
-
-      elements.forEach((item) => observer.observe(item.el));
-      return () => observer.disconnect();
-    } else {
-      setActiveSection("");
+    if (routePath.startsWith("/blog")) {
+      setActiveSection("blog");
+      return;
     }
-  }, [pathname]);
+    if (routePath.startsWith("/countries")) {
+      setActiveSection("countries");
+      return;
+    }
+    if (routePath.startsWith("/how-it-works")) {
+      setActiveSection("how-it-works");
+      return;
+    }
+    if (routePath.startsWith("/about")) {
+      setActiveSection("about");
+      return;
+    }
+    if (routePath.startsWith("/pricing")) {
+      setActiveSection("pricing");
+      return;
+    }
+    if (routePath === "/quiz") {
+      setActiveSection("quiz-section");
+      return;
+    }
+    if (routePath !== "/") {
+      setActiveSection("");
+      return;
+    }
 
-  React.useEffect(() => {
-    if (!mobileMenuOpen) return;
-    const links = mobileLinkRefs.current.filter(Boolean) as HTMLAnchorElement[];
-    if (!links.length) return;
-    gsap.fromTo(
-      links,
-      { x: -40, opacity: 0 },
-      { x: 0, opacity: 1, duration: 0.35, stagger: 0.05, ease: "power3.out" }
+    const sectionIds = ["countries", "how-it-works", "quiz-section", "about", "contact-form", "pricing"];
+    const elements = sectionIds
+      .map((id) => ({ id, el: document.getElementById(id) }))
+      .filter((item): item is { id: string; el: HTMLElement } => Boolean(item.el));
+
+    if (!elements.length) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (!visible) return;
+        setActiveSection((visible.target as HTMLElement).id);
+      },
+      { rootMargin: "-38% 0px -48% 0px", threshold: [0.2, 0.45, 0.7] }
     );
-  }, [mobileMenuOpen, pathname]);
 
-  const navLinks = [
-    { name: "Страны", href: "/#countries", sectionId: "countries" },
-    { name: "Как это работает", href: "/#how-it-works", sectionId: "how-it-works" },
-    { name: "Подбор", href: "/quiz", sectionId: "quiz" },
-    { name: "Отзывы", href: "/reviews", sectionId: "testimonials" },
-    { name: "Контакты", href: "/#footer", sectionId: "footer" },
-  ];
-
-  const handleResultClick = () => {
-    setQuery("");
-    setSearchOpen(false);
-    setMobileMenuOpen(false);
-  };
+    elements.forEach((item) => observer.observe(item.el));
+    return () => observer.disconnect();
+  }, [pathname]);
 
   return (
     <>
       <header
         className={cn(
-          "fixed top-0 w-full z-50 transition-all duration-300",
-          scrolled
-            ? "border-b border-[rgba(232,230,225,0.5)] bg-[rgba(255,255,255,0.85)] py-4 backdrop-blur-xl"
-            : "bg-white/80 py-6 backdrop-blur-sm"
+          "fixed top-0 z-50 w-full transition-all duration-300",
+          scrolled ? "bg-white/95 py-3 shadow-[0_8px_30px_rgba(26,17,8,0.06)] backdrop-blur-xl" : "bg-white/80 py-5 backdrop-blur-md"
         )}
       >
-        <Container className="flex items-center justify-between">
-          <Link
-            href="/"
-            className={cn(
-              "font-extrabold text-brand tracking-tight transition-all duration-300",
-              scrolled ? "text-lg" : "text-xl"
-            )}
-          >
-            Studify
-          </Link>
+        <Container>
+          <div className="flex h-12 items-center justify-between gap-6">
+          <BrandLogo />
 
-          <nav className="hidden lg:flex items-center gap-7">
+          <nav className="hidden items-center gap-5 xl:flex">
             {navLinks.map((link) => (
               <Link
-                key={link.name}
+                key={link.key}
                 href={link.href}
                 className={cn(
-                  "relative pb-2 text-sm font-semibold transition-colors",
-                  activeSection === link.sectionId ? "text-brand" : "text-secondary hover:text-primary"
+                  "relative whitespace-nowrap py-3 text-sm font-bold text-secondary transition-colors hover:text-primary",
+                  activeSection === link.sectionId && "text-primary"
                 )}
               >
-                {link.name}
-                {activeSection === link.sectionId && (
-                  <span className="absolute -bottom-0.5 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-brand" />
-                )}
+                {labels[locale][link.key]}
+                <span
+                  className={cn(
+                    "absolute bottom-1 left-0 h-0.5 rounded-full bg-brand transition-all duration-300",
+                    activeSection === link.sectionId ? "w-full" : "w-0"
+                  )}
+                />
               </Link>
             ))}
           </nav>
 
-          <div className="hidden lg:flex items-center gap-3">
-            {/* Десктопный поиск */}
-            <div className="relative hidden xl:block" ref={desktopSearchRef}>
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-secondary/70" />
-              <input
-                value={query}
-                onChange={(e) => {
-                  setQuery(e.target.value);
-                  setSearchOpen(true);
-                }}
-                onFocus={() => setSearchOpen(true)}
-                placeholder="Поиск"
-                className="h-11 w-[280px] rounded-pill border border-gray-200 bg-white pl-9 pr-4 text-sm font-medium text-primary outline-none transition-all placeholder:text-secondary/70 focus:border-brand focus:ring-4 focus:ring-brand/10"
-                aria-label="Поиск по сайту"
-              />
-
-              {/* Выпадашка десктопного поиска */}
-              {searchOpen && query.trim().length > 0 && (
-                <div className="absolute left-0 top-full mt-2 w-full overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-xl">
-                  {searchResults.length > 0 ? (
-                    <ul className="max-h-[300px] overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-gray-200">
-                      {searchResults.map((res) => {
-                        const Icon = res.icon;
-                        return (
-                          <li key={res.id}>
-                            <Link
-                              href={res.href}
-                              onClick={handleResultClick}
-                              className="group flex items-center gap-3 rounded-xl p-3 transition-colors hover:bg-gray-50"
-                            >
-                              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand/10 text-brand">
-                                <Icon className="h-4 w-4" />
-                              </div>
-                              <div className="flex-1 overflow-hidden">
-                                <h4 className="truncate text-sm font-semibold text-primary group-hover:text-brand transition-colors">
-                                  {res.title}
-                                </h4>
-                                <p className="truncate text-xs text-secondary/70">{res.description}</p>
-                              </div>
-                              <ChevronRight className="h-4 w-4 text-gray-300 transition-transform group-hover:translate-x-1 group-hover:text-brand" />
-                            </Link>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  ) : (
-                    <div className="p-6 text-center text-sm text-secondary">
-                      Ничего не найдено по запросу <span className="font-semibold text-primary">«{query}»</span>
-                    </div>
+          <div className="hidden shrink-0 items-center gap-3 xl:flex">
+            <div className="inline-flex h-11 items-center rounded-xl border border-neutral-200 bg-white p-1">
+              {localeOptions.map((item) => (
+                <button
+                  key={item.value}
+                  type="button"
+                  onClick={() => changeLocale(item.value)}
+                  className={cn(
+                    "h-8 rounded-lg px-3 text-xs font-extrabold transition-colors",
+                    selectedLocale === item.value ? "bg-brand text-white" : "text-secondary hover:bg-neutral-50 hover:text-primary"
                   )}
-                </div>
-              )}
+                  aria-pressed={selectedLocale === item.value}
+                >
+                  {item.label}
+                </button>
+              ))}
             </div>
-
-            <div className="inline-flex h-11 items-center rounded-pill border border-gray-200 bg-white p-1">
-              <button
-                type="button"
-                onClick={() => setLanguage("ru")}
-                className={cn(
-                  "rounded-pill px-3 py-1 text-xs font-bold uppercase tracking-wide transition-colors",
-                  language === "ru" ? "bg-brand text-white" : "text-secondary hover:text-primary"
-                )}
-              >
-                RU
-              </button>
-              <button
-                type="button"
-                onClick={() => setLanguage("uz")}
-                className={cn(
-                  "rounded-pill px-3 py-1 text-xs font-bold uppercase tracking-wide transition-colors",
-                  language === "uz" ? "bg-brand text-white" : "text-secondary hover:text-primary"
-                )}
-              >
-                UZ
-              </button>
-            </div>
-
-            <Button variant="primary">Консультация</Button>
+            <Link href="/contacts" className={buttonVariants({ size: "sm", className: "h-11 gap-2 px-5" })}>
+              {labels[locale].contact}
+              <ArrowUpRight className="h-4 w-4" />
+            </Link>
           </div>
 
           <button
-            className="lg:hidden p-2 -mr-2 text-primary"
+            type="button"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-neutral-200 bg-white text-primary shadow-sm xl:hidden"
             onClick={() => setMobileMenuOpen(true)}
-            aria-label="Open menu"
+            aria-label="Открыть меню"
           >
-            <Menu className="w-6 h-6" />
+            <Menu className="h-6 w-6" />
           </button>
+          </div>
         </Container>
-        <div className="absolute bottom-0 left-0 h-[2px] bg-[#FF8225] transition-all duration-150" style={{ width: `${scrollProgress}%` }} />
+        {scrolled ? (
+          <div className="absolute bottom-0 left-0 h-[2px] bg-brand transition-all duration-150" style={{ width: `${scrollProgress}%` }} />
+        ) : null}
       </header>
 
-      {/* Mobile Menu */}
-      {mobileMenuOpen && (
-        <div className="fixed inset-0 z-[60] flex flex-col bg-[#1A1108] px-6 pb-8 pt-6 lg:hidden overflow-y-auto">
-          <div className="flex items-center justify-between mb-8 shrink-0">
-            <Link href="/" className="font-extrabold text-2xl text-brand tracking-tight" onClick={() => setMobileMenuOpen(false)}>
-              Studify
-            </Link>
+      {mobileMenuOpen ? (
+        <div className="fixed inset-0 z-[60] bg-white xl:hidden">
+          <div className="flex items-center justify-between">
+            <div className="px-6 py-5">
+              <BrandLogo onClick={() => setMobileMenuOpen(false)} />
+            </div>
             <button
+              type="button"
               onClick={() => setMobileMenuOpen(false)}
-              className="p-2 -mr-2 text-brand transition-colors hover:text-[#ff9b4f]"
+              className="mr-6 inline-flex h-11 w-11 items-center justify-center rounded-xl border border-neutral-200 text-primary transition-colors hover:bg-neutral-50"
+              aria-label="Закрыть меню"
             >
-              <X className="w-6 h-6" />
+              <X className="h-6 w-6" />
             </button>
           </div>
-          
-          <div className="flex flex-col flex-1">
-            {/* Мобильный поиск */}
-            <div className="w-full relative z-10 mb-8">
-              <label htmlFor="mobile-search" className="sr-only">Поиск по сайту</label>
-              <div className="relative">
-                <Search className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-white/50" />
-                <input
-                  id="mobile-search"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Найти страну или программу..."
-                  className="h-14 w-full rounded-2xl border border-white/15 bg-white/5 pl-11 pr-4 text-base font-medium text-white outline-none transition-all placeholder:text-white/40 focus:border-brand focus:bg-white/10"
-                  autoComplete="off"
-                />
-              </div>
 
-              {/* Выпадашка мобильного поиска */}
-              {query.trim().length > 0 && (
-                <div className="absolute left-0 top-full mt-2 w-full overflow-hidden rounded-2xl border border-white/10 bg-[#24170D] shadow-2xl">
-                  {searchResults.length > 0 ? (
-                    <ul className="max-h-[250px] overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-white/10">
-                      {searchResults.map((res) => {
-                        const Icon = res.icon;
-                        return (
-                          <li key={res.id}>
-                            <Link
-                              href={res.href}
-                              onClick={handleResultClick}
-                              className="flex items-center gap-3 rounded-xl p-3 transition-colors hover:bg-white/5 active:bg-white/10"
-                            >
-                              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand/20 text-brand">
-                                <Icon className="h-5 w-5" />
-                              </div>
-                              <div className="flex-1 overflow-hidden">
-                                <h4 className="truncate text-base font-semibold text-white">
-                                  {res.title}
-                                </h4>
-                                <p className="truncate text-sm text-white/50">{res.description}</p>
-                              </div>
-                            </Link>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  ) : (
-                    <div className="p-6 text-center text-sm text-white/50">
-                      Ничего не найдено по запросу <br/> <span className="font-semibold text-white">«{query}»</span>
-                    </div>
+          <div className="px-6 pb-5">
+            <div className="inline-flex h-12 w-full items-center rounded-2xl border border-neutral-200 bg-[#FAFAFA] p-1">
+              {localeOptions.map((item) => (
+                <button
+                  key={item.value}
+                  type="button"
+                  onClick={() => changeLocale(item.value)}
+                  className={cn(
+                    "h-10 flex-1 rounded-xl text-sm font-extrabold transition-colors",
+                    selectedLocale === item.value ? "bg-brand text-white" : "text-secondary"
                   )}
-                </div>
-              )}
+                  aria-pressed={selectedLocale === item.value}
+                >
+                  {item.label}
+                </button>
+              ))}
             </div>
+          </div>
 
-            {/* Скрываем основное меню на мобилке, если пользователь активно ищет */}
-            {query.trim().length === 0 && (
-              <nav className="flex flex-col gap-6 items-center justify-center flex-1 animate-in fade-in slide-in-from-bottom-4 duration-300">
-                <div className="inline-flex h-12 items-center rounded-pill border border-white/20 bg-white/5 p-1 mb-4">
-                  <button
-                    type="button"
-                    onClick={() => setLanguage("ru")}
-                    className={cn(
-                      "rounded-pill px-4 py-2 text-sm font-bold uppercase tracking-wide transition-all",
-                      language === "ru" ? "bg-brand text-white shadow-lg" : "text-white/60 hover:text-white"
-                    )}
-                  >
-                    RU
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setLanguage("uz")}
-                    className={cn(
-                      "rounded-pill px-4 py-2 text-sm font-bold uppercase tracking-wide transition-all",
-                      language === "uz" ? "bg-brand text-white shadow-lg" : "text-white/60 hover:text-white"
-                    )}
-                  >
-                    UZ
-                  </button>
-                </div>
+          <nav className="border-y border-neutral-100">
+            {navLinks.map((link) => (
+              <Link
+                key={link.key}
+                href={link.href}
+                className={cn(
+                  "flex items-center justify-between border-b border-neutral-100 px-6 py-5 text-xl font-extrabold transition-colors last:border-b-0",
+                  activeSection === link.sectionId ? "text-brand" : "text-primary hover:bg-[#FFF8F2]"
+                )}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <span>{labels[locale][link.key]}</span>
+                <ArrowUpRight className="h-5 w-5 text-brand" />
+              </Link>
+            ))}
+          </nav>
 
-                {navLinks.map((link) => (
-                  <Link
-                    key={link.name}
-                    href={link.href}
-                    ref={(el) => {
-                      mobileLinkRefs.current[navLinks.findIndex((l) => l.name === link.name)] = el;
-                    }}
-                    className={cn(
-                      "text-3xl font-bold transition-colors",
-                      activeSection === link.sectionId ? "text-brand" : "text-white/90 hover:text-brand"
-                    )}
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    {link.name}
-                  </Link>
-                ))}
-                <div className="mt-8 w-full max-w-xs">
-                  <Button variant="primary" className="w-full h-14 text-lg" size="lg" onClick={() => setMobileMenuOpen(false)}>
-                    Консультация
-                  </Button>
-                </div>
-              </nav>
-            )}
+          <div className="px-6 py-6">
+            <a href="tel:+998939492000" className="block text-sm font-bold text-secondary">
+              +998 93 949 20 00
+            </a>
+            <Link
+              href="/contacts"
+              className={buttonVariants({ size: "lg", className: "mt-4 h-14 w-full gap-2 text-lg" })}
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              {labels[locale].contact}
+              <ArrowUpRight className="h-4 w-4" />
+            </Link>
           </div>
         </div>
-      )}
+      ) : null}
     </>
   );
 }

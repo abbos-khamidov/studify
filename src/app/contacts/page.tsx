@@ -230,10 +230,10 @@ export default function ContactsPage() {
                 icon={<Phone size={20} />}
               >
                 <a
-                  href="tel:+998901234567"
+                  href="tel:+998939492000"
                   className="block hover:text-[#FF8225] transition-colors font-medium"
                 >
-                  +998 90 123 45 67
+                  +998 93 949 20 00
                 </a>
                 <a
                   href="tel:+998712345678"

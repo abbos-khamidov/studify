@@ -2,11 +2,10 @@
 import { Metadata } from "next";
 import { Container } from "@/components/ui/Container";
 import { SectionTag } from "@/components/ui/SectionTag";
-import { Navbar } from "@/components/sections/Navbar";
 import { ReviewsGrid } from "@/components/sections/ReviewsGrid";
 
 // Данные вынесены для использования в SSR (SEO) и клиентском компоненте
-export const testimonials = [
+const testimonials = [
   {
     id: 1,
     name: "Малика Каримова",
@@ -117,7 +116,6 @@ export default function ReviewsPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <Navbar />
       <main className="min-h-screen bg-[#FAFAFA] selection:bg-brand selection:text-white pt-[100px]">
         {/* Header Section */}
         <section className="relative py-20 overflow-hidden">

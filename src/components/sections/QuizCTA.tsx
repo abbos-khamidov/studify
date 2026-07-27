@@ -6,7 +6,7 @@ import { buttonVariants } from "@/components/ui/Button";
 
 export function QuizCTA() {
   return (
-    <section className="py-20 lg:py-[120px] bg-secondary relative overflow-hidden">
+    <section id="quiz-section" className="py-20 lg:py-[120px] bg-secondary relative overflow-hidden scroll-mt-24">
       <div className="absolute top-1/2 left-1/4 w-64 h-64 bg-brand/5 rounded-full blur-3xl -translate-y-1/2 pointer-events-none" />
       <div className="absolute top-1/2 right-1/4 w-64 h-64 bg-brand/5 rounded-full blur-3xl -translate-y-1/2 pointer-events-none" />
       

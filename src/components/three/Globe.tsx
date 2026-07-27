@@ -8,6 +8,7 @@ import * as THREE from "three";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, MapPin, GraduationCap, Globe2, ExternalLink } from "lucide-react";
 import { GlobePlaceholder } from "./GlobePlaceholder";
+import { useLocale, type Locale } from "@/hooks/useLocale";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const ORANGE = new THREE.Color("#FF8225");
@@ -145,6 +146,95 @@ const CITIES: City[] = [
     link: "/countries/poland",
   },
 ];
+
+const GLOBE_COPY: Record<Locale, {
+  details: string;
+  mapAria: string;
+  hint: string;
+  close: string;
+  universities: string;
+  diploma: string;
+  info: string;
+  topUniversities: string;
+  contacts: string;
+  viewUniversities: string;
+  cities: Record<string, { name: string; uniLabel: string; description: string; topUnis: string[] }>;
+}> = {
+  uz: {
+    details: "Batafsil ko'rish uchun bosing",
+    mapAria: "Studify interaktiv dunyo xaritasi",
+    hint: "Ma'lumotni ko'rish uchun pulsatsiya qilayotgan shaharga bosing",
+    close: "Yopish",
+    universities: "universitet",
+    diploma: "diplom tan olinishi",
+    info: "Ma'lumot",
+    topUniversities: "Top universitetlar",
+    contacts: "Kontaktlar sahifasiga o'tish",
+    viewUniversities: "Barcha universitetlarni ko'rish",
+    cities: {
+      tashkent: {
+        name: "Toshkent",
+        uniLabel: "Uy · Studify HQ",
+        description: "Studify bosh ofisi. Shu yerdan O'zbekiston bo'ylab talabalarga dunyoning kuchli universitetlariga kirishda yordam beramiz.",
+        topUnis: ["Ofisimiz Toshkent markazida", "Konsultatsiya bepul", "Dushanba-Shanba 10:00-19:00"],
+      },
+      usa: { name: "AQSH", uniLabel: "200+ universitet", description: "Dunyodagi eng yirik tadqiqot universitetlari markazi. AQSH diplomi global imkoniyatlar ochadi.", topUnis: ["MIT", "Stanford University", "Harvard University", "UC Berkeley"] },
+      "czech-republic": { name: "Chexiya", uniLabel: "20+ universitet", description: "Yevropa markazida sifatli va qulay ta'lim. Chex tilida o'qish bepul bo'lishi mumkin.", topUnis: ["Charles University", "CTU Prague", "Masaryk University"] },
+      latvia: { name: "Latviya", uniLabel: "8+ universitet", description: "O'qish davomida Yevropa diplomi va YI yashash ruxsatiga tez yo'l.", topUnis: ["University of Latvia", "RTU Riga", "RSU"] },
+      hungary: { name: "Vengriya", uniLabel: "18+ universitet", description: "Stipendium Hungaricum stipendiyasi chet ellik talabalar uchun o'qish va yashash xarajatlarini qoplaydi.", topUnis: ["Budapest University of Technology", "University of Debrecen", "Semmelweis University"] },
+      australia: { name: "Avstraliya", uniLabel: "40+ universitet", description: "Dunyoning top 100 taligida 8 ta universitet. O'qishdan keyin Graduate Visa imkoniyati bor.", topUnis: ["University of Melbourne", "ANU", "University of Sydney", "UNSW"] },
+      germany: { name: "Germaniya", uniLabel: "35+ universitet", description: "Davlat universitetlarida chet elliklar uchun ham bepul ta'lim imkoniyati. Kuchli muhandislik maktablari.", topUnis: ["TU Munich", "LMU Munich", "Heidelberg University", "KIT"] },
+      italy: { name: "Italiya", uniLabel: "22+ universitet", description: "Bologna kabi qadimiy universitetlar va DSU stipendiyalari xarajatlarni 100% gacha qoplashi mumkin.", topUnis: ["Sapienza University", "University of Bologna", "Politecnico di Milano"] },
+      uk: { name: "Buyuk Britaniya", uniLabel: "25+ universitet", description: "Jahon tan olgan ta'lim brendlari. Bakalavr 3 yil, magistratura 1 yil davom etadi.", topUnis: ["Oxford", "Cambridge", "Imperial College", "UCL"] },
+      netherlands: { name: "Niderlandiya", uniLabel: "18+ universitet", description: "Ingliz tilida 2000+ dastur, yuqori turmush darajasi va ochiq madaniyat.", topUnis: ["Delft University", "University of Amsterdam", "Leiden University"] },
+      "south-korea": { name: "Janubiy Koreya", uniLabel: "45+ universitet", description: "Texnologiya va innovatsiyalar markazi. KGSP stipendiyasi xarajatlarni to'liq qoplashi mumkin.", topUnis: ["Seoul National University", "KAIST", "Yonsei University", "POSTECH"] },
+      poland: { name: "Polsha", uniLabel: "20+ universitet", description: "Yevropa markazida sifatli dasturlar va yashash/o'qish xarajatlari nisbatan qulay.", topUnis: ["University of Warsaw", "AGH Kraków", "Warsaw University of Technology"] },
+    },
+  },
+  ru: {
+    details: "Нажмите для подробностей",
+    mapAria: "Интерактивная карта мира Studify",
+    hint: "Кликните по пульсирующему городу для просмотра информации",
+    close: "Закрыть",
+    universities: "университетов",
+    diploma: "признание диплома",
+    info: "Информация",
+    topUniversities: "Топ университеты",
+    contacts: "Перейти на страницу контактов",
+    viewUniversities: "Посмотреть все университеты",
+    cities: Object.fromEntries(CITIES.map((city) => [city.id, { name: city.name, uniLabel: city.uniLabel, description: city.description, topUnis: city.topUnis }])) as Record<string, { name: string; uniLabel: string; description: string; topUnis: string[] }>,
+  },
+  en: {
+    details: "Click for details",
+    mapAria: "Studify interactive world map",
+    hint: "Click a pulsing city to view information",
+    close: "Close",
+    universities: "universities",
+    diploma: "diploma recognition",
+    info: "Information",
+    topUniversities: "Top universities",
+    contacts: "Go to contacts page",
+    viewUniversities: "View all universities",
+    cities: {
+      tashkent: { name: "Tashkent", uniLabel: "Home · Studify HQ", description: "Studify headquarters. From here we help students across Uzbekistan enter top universities worldwide.", topUnis: ["Our office is in central Tashkent", "Free consultations", "Mon-Sat 10:00-19:00"] },
+      usa: { name: "USA", uniLabel: "200+ universities", description: "Home to the world's leading research universities. A US diploma opens global opportunities.", topUnis: ["MIT", "Stanford University", "Harvard University", "UC Berkeley"] },
+      "czech-republic": { name: "Czech Republic", uniLabel: "20+ universities", description: "Affordable high-quality education in the heart of Europe. Czech-language study can be free.", topUnis: ["Charles University", "CTU Prague", "Masaryk University"] },
+      latvia: { name: "Latvia", uniLabel: "8+ universities", description: "A fast path to a European diploma with EU residence options during study.", topUnis: ["University of Latvia", "RTU Riga", "RSU"] },
+      hungary: { name: "Hungary", uniLabel: "18+ universities", description: "The Stipendium Hungaricum scholarship supports tuition and living costs for international students.", topUnis: ["Budapest University of Technology", "University of Debrecen", "Semmelweis University"] },
+      australia: { name: "Australia", uniLabel: "40+ universities", description: "Eight universities in the global top 100 with post-study Graduate Visa options.", topUnis: ["University of Melbourne", "ANU", "University of Sydney", "UNSW"] },
+      germany: { name: "Germany", uniLabel: "35+ universities", description: "Public universities can be tuition-free even for international students. Strong engineering schools.", topUnis: ["TU Munich", "LMU Munich", "Heidelberg University", "KIT"] },
+      italy: { name: "Italy", uniLabel: "22+ universities", description: "Historic universities and DSU scholarships that can cover up to 100% of costs.", topUnis: ["Sapienza University", "University of Bologna", "Politecnico di Milano"] },
+      uk: { name: "United Kingdom", uniLabel: "25+ universities", description: "Globally recognized education brands. Bachelor's programs take 3 years, master's programs 1 year.", topUnis: ["Oxford", "Cambridge", "Imperial College", "UCL"] },
+      netherlands: { name: "Netherlands", uniLabel: "18+ universities", description: "Over 2000 programs in English, high quality of life and an open culture.", topUnis: ["Delft University", "University of Amsterdam", "Leiden University"] },
+      "south-korea": { name: "South Korea", uniLabel: "45+ universities", description: "A fast-growing hub for technology and innovation. KGSP can fully cover study costs.", topUnis: ["Seoul National University", "KAIST", "Yonsei University", "POSTECH"] },
+      poland: { name: "Poland", uniLabel: "20+ universities", description: "Affordable study and living costs with strong programs in central Europe.", topUnis: ["University of Warsaw", "AGH Kraków", "Warsaw University of Technology"] },
+    },
+  },
+};
+
+function getCityText(city: City, locale: Locale) {
+  return GLOBE_COPY[locale].cities[city.id] ?? GLOBE_COPY.ru.cities[city.id];
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function latLonToVec3(lat: number, lon: number, radius = 1): THREE.Vector3 {
@@ -346,9 +436,11 @@ function PulseRing({ phase = 0 }: { phase?: number }) {
   );
 }
 
-function CityMarker({ city, hoveredId, setHoveredId, onSelect }: {
-  city: City; hoveredId: string | null; setHoveredId: (id: string | null) => void; onSelect: (city: City) => void;
+function CityMarker({ city, hoveredId, setHoveredId, onSelect, locale }: {
+  city: City; hoveredId: string | null; setHoveredId: (id: string | null) => void; onSelect: (city: City) => void; locale: Locale;
 }) {
+  const cityText = getCityText(city, locale);
+  const t = GLOBE_COPY[locale];
   const pos = React.useMemo(() => latLonToVec3(city.lat, city.lon, 1.002), [city.lat, city.lon]);
   const hitR = city.home ? 0.05 : 0.04;
   const dotR = city.home ? 0.02 : 0.013;
@@ -381,9 +473,9 @@ function CityMarker({ city, hoveredId, setHoveredId, onSelect }: {
       {hoveredId === city.id && (
         <Html position={[0, 0.06, 0.02]} center style={{ pointerEvents: "none", transform: "translateY(-100%)" }} zIndexRange={[100, 0]}>
           <div style={{ background: "rgba(255,255,255,0.95)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,130,37,0.2)", borderRadius: "8px", padding: "6px 10px", whiteSpace: "nowrap", boxShadow: "0 2px 8px rgba(0,0,0,0.1)", fontSize: "12px", lineHeight: 1.4 }}>
-            <div style={{ fontWeight: 700, color: "#1A1108" }}>{city.flag} {city.name}</div>
-            <div style={{ color: "#FF8225", fontWeight: 600, fontSize: "11px" }}>{city.uniLabel}</div>
-            <div style={{ color: "#9ca3af", fontSize: "10px", marginTop: 2 }}>Нажмите для подробностей</div>
+            <div style={{ fontWeight: 700, color: "#1A1108" }}>{city.flag} {cityText.name}</div>
+            <div style={{ color: "#FF8225", fontWeight: 600, fontSize: "11px" }}>{cityText.uniLabel}</div>
+            <div style={{ color: "#9ca3af", fontSize: "10px", marginTop: 2 }}>{t.details}</div>
           </div>
         </Html>
       )}
@@ -415,7 +507,7 @@ function ConnectionArc({ start, end, speed, offset }: { start: THREE.Vector3; en
   );
 }
 
-function GlobeScene({ reducedMotion = false, onCitySelect }: { reducedMotion?: boolean; onCitySelect: (city: City) => void }) {
+function GlobeScene({ reducedMotion = false, onCitySelect, locale }: { reducedMotion?: boolean; onCitySelect: (city: City) => void; locale: Locale }) {
   const rootRef = React.useRef<THREE.Group>(null);
   const startTime = React.useRef<number | null>(null);
   const initializedPose = React.useRef(false);
@@ -496,7 +588,7 @@ function GlobeScene({ reducedMotion = false, onCitySelect }: { reducedMotion?: b
         <CountryBorders countryFeatures={countryFeatures} />
         <CountryHoverOverlay country={hoveredCountry} />
         <DotMatrix />
-        {CITIES.map((city) => <CityMarker key={city.id} city={city} hoveredId={hoveredId} setHoveredId={setHoveredId} onSelect={onCitySelect} />)}
+        {CITIES.map((city) => <CityMarker key={city.id} city={city} hoveredId={hoveredId} setHoveredId={setHoveredId} onSelect={onCitySelect} locale={locale} />)}
         {destinations.map((end, i) => <ConnectionArc key={i} start={tashkent} end={end} speed={0.22 + i * 0.04} offset={i * 0.17} />)}
       </group>
     </group>
@@ -505,7 +597,8 @@ function GlobeScene({ reducedMotion = false, onCitySelect }: { reducedMotion?: b
 
 
 
-function MobileWorldMap({ onSelect }: { onSelect: (city: City) => void }) {
+function MobileWorldMap({ onSelect, locale }: { onSelect: (city: City) => void; locale: Locale }) {
+  const t = GLOBE_COPY[locale];
   const [countryFeatures, setCountryFeatures] = React.useState<CountryFeature[]>(() => _geoCache ?? []);
   const [activeCityId, setActiveCityId] = React.useState<string | null>(null);
 
@@ -520,10 +613,10 @@ function MobileWorldMap({ onSelect }: { onSelect: (city: City) => void }) {
   const toX = (lon: number) => lon + 180;
   const toY = (lat: number) => 90 - lat;
 
-  const ringToD = (ring: number[][]): string => {
+  const ringToD = React.useCallback((ring: number[][]): string => {
     if (ring.length < 3) return "";
     return ring.map((pt, i) => `${i === 0 ? "M" : "L"}${toX(pt[0]).toFixed(1)},${toY(pt[1]).toFixed(1)}`).join(" ") + "Z";
-  };
+  }, []);
 
   const countryPaths = React.useMemo(() =>
     countryFeatures.map((country) => {
@@ -567,7 +660,7 @@ function MobileWorldMap({ onSelect }: { onSelect: (city: City) => void }) {
           viewBox={`0 15 ${W} 135`}
           xmlns="http://www.w3.org/2000/svg"
           className="w-full h-auto block"
-          aria-label="Интерактивная карта мира Studify"
+          aria-label={t.mapAria}
         >
           <rect width={W} height={H} fill="#EEF2F5" />
 
@@ -629,7 +722,7 @@ function MobileWorldMap({ onSelect }: { onSelect: (city: City) => void }) {
             const delay = (city.id.charCodeAt(0) % 20) * 0.12;
 
             return (
-              <g key={city.id} style={{ cursor: "pointer" }} onClick={() => handleTap(city)} role="button" aria-label={city.name}>
+              <g key={city.id} style={{ cursor: "pointer" }} onClick={() => handleTap(city)} role="button" aria-label={getCityText(city, locale).name}>
                 <circle cx={cx} cy={cy} r={coreR} fill="none" stroke="#FF8225" strokeWidth={1.4} opacity={0}>
                   <animate attributeName="r" values={`${coreR};${coreR * 3.8}`} dur={isHome ? "1.8s" : "2.1s"} begin={`${delay}s`} repeatCount="indefinite" />
                   <animate attributeName="opacity" values="0.85;0" dur={isHome ? "1.8s" : "2.1s"} begin={`${delay}s`} repeatCount="indefinite" />
@@ -656,14 +749,16 @@ function MobileWorldMap({ onSelect }: { onSelect: (city: City) => void }) {
       {/* Текст поверх карты или снизу, делаем его sticky, чтобы не уезжал при горизонтальном скролле */}
       <div className="sticky left-0 right-0 w-full flex justify-center pb-3 pt-1">
         <p className="text-[11px] font-semibold tracking-wide text-[#FF8225] uppercase">
-          Нажмите на точку для просмотра информации
+          {t.details}
         </p>
       </div>
     </div>
   );
 }
 
-function CityModal({ city, onClose }: { city: City; onClose: () => void }) {
+function CityModal({ city, onClose, locale }: { city: City; onClose: () => void; locale: Locale }) {
+  const t = GLOBE_COPY[locale];
+  const cityText = getCityText(city, locale);
   React.useEffect(() => {
     const h = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", h);
@@ -696,34 +791,34 @@ function CityModal({ city, onClose }: { city: City; onClose: () => void }) {
           <div className="flex items-center gap-3">
             <span className="text-4xl leading-none select-none">{city.flag}</span>
             <div>
-              <h2 className="text-xl font-bold text-neutral-900 leading-tight">{city.name}</h2>
-              <p className="mt-0.5 text-sm font-semibold text-[#FF8225]">{city.home ? "Studify HQ" : city.uniLabel}</p>
+              <h2 className="text-xl font-bold text-neutral-900 leading-tight">{cityText.name}</h2>
+              <p className="mt-0.5 text-sm font-semibold text-[#FF8225]">{city.home ? "Studify HQ" : cityText.uniLabel}</p>
             </div>
           </div>
-          <button onClick={onClose} className="shrink-0 flex h-8 w-8 items-center justify-center rounded-full bg-white/80 text-neutral-400 hover:bg-white hover:text-neutral-800 transition-colors shadow-sm" aria-label="Закрыть">
+          <button onClick={onClose} className="shrink-0 flex h-8 w-8 items-center justify-center rounded-full bg-white/80 text-neutral-400 hover:bg-white hover:text-neutral-800 transition-colors shadow-sm" aria-label={t.close}>
             <X size={16} />
           </button>
         </div>
 
         {/* Body */}
         <div className="px-6 py-5 space-y-5">
-          <p className="text-sm text-neutral-600 leading-relaxed">{city.description}</p>
+          <p className="text-sm text-neutral-600 leading-relaxed">{cityText.description}</p>
           {!city.home && (
             <div className="grid grid-cols-2 gap-3">
               <div className="flex items-center gap-2.5 rounded-2xl border border-neutral-100 bg-neutral-50 p-3.5">
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#FF8225]/10"><GraduationCap size={16} className="text-[#FF8225]" /></div>
-                <div><p className="text-base font-bold text-neutral-900 leading-none">{city.uniCount}+</p><p className="mt-0.5 text-[11px] text-neutral-400">университетов</p></div>
+                <div><p className="text-base font-bold text-neutral-900 leading-none">{city.uniCount}+</p><p className="mt-0.5 text-[11px] text-neutral-400">{t.universities}</p></div>
               </div>
               <div className="flex items-center gap-2.5 rounded-2xl border border-neutral-100 bg-neutral-50 p-3.5">
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#FF8225]/10"><Globe2 size={16} className="text-[#FF8225]" /></div>
-                <div><p className="text-base font-bold text-neutral-900 leading-none">EU</p><p className="mt-0.5 text-[11px] text-neutral-400">признание диплома</p></div>
+                <div><p className="text-base font-bold text-neutral-900 leading-none">EU</p><p className="mt-0.5 text-[11px] text-neutral-400">{t.diploma}</p></div>
               </div>
             </div>
           )}
           <div>
-            <p className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-neutral-400">{city.home ? "Информация" : "Топ университеты"}</p>
+            <p className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-neutral-400">{city.home ? t.info : t.topUniversities}</p>
             <ul className="space-y-2">
-              {city.topUnis.map((uni, i) => (
+              {cityText.topUnis.map((uni, i) => (
                 <motion.li key={uni} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.12 + i * 0.06, duration: 0.28 }} className="flex items-center gap-2.5 text-sm text-neutral-700">
                   <span className="h-1.5 w-1.5 rounded-full bg-[#FF8225] shrink-0" />{uni}
                 </motion.li>
@@ -735,7 +830,7 @@ function CityModal({ city, onClose }: { city: City; onClose: () => void }) {
         {city.link && (
           <div className="px-6 pb-6">
             <a href={city.link} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#FF8225] px-5 py-3.5 text-sm font-semibold text-white shadow-[0_4px_16px_rgba(255,130,37,0.35)] transition-all hover:shadow-[0_6px_24px_rgba(255,130,37,0.45)] hover:-translate-y-0.5 active:translate-y-0">
-              {city.home ? <><MapPin size={15} />Перейти на страницу контактов</> : <><ExternalLink size={15} />Посмотреть все университеты</>}
+              {city.home ? <><MapPin size={15} />{t.contacts}</> : <><ExternalLink size={15} />{t.viewUniversities}</>}
             </a>
           </div>
         )}
@@ -772,6 +867,7 @@ function usePrefersReducedMotion() {
 // ─── Globe (exported) ─────────────────────────────────────────────────────────
 export function Globe() {
   const { mobile, ready } = useIsMobile();
+  const locale = useLocale();
   const reducedMotion = usePrefersReducedMotion();
   const [selectedCity, setSelectedCity] = React.useState<City | null>(null);
 
@@ -787,7 +883,7 @@ export function Globe() {
     <>
       {mobile ? (
         <div className="w-full px-3 py-2">
-          <MobileWorldMap onSelect={setSelectedCity} />
+          <MobileWorldMap onSelect={setSelectedCity} locale={locale} />
         </div>
       ) : (
         <div className="relative h-full min-h-[320px] w-full">
@@ -798,18 +894,18 @@ export function Globe() {
             gl={{ alpha: true, antialias: true, powerPreference: "high-performance" }}
           >
             <React.Suspense fallback={null}>
-              <GlobeScene reducedMotion={reducedMotion} onCitySelect={setSelectedCity} />
+              <GlobeScene reducedMotion={reducedMotion} onCitySelect={setSelectedCity} locale={locale} />
             </React.Suspense>
           </Canvas>
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 whitespace-nowrap text-center text-sm font-medium text-[#FF8225] pointer-events-none">
-            Кликните по пульсирующему городу для просмотра информации
+            {GLOBE_COPY[locale].hint}
           </div>
         </div>
       )}
 
       <AnimatePresence>
         {selectedCity && (
-          <CityModal key={selectedCity.id} city={selectedCity} onClose={() => setSelectedCity(null)} />
+          <CityModal key={selectedCity.id} city={selectedCity} onClose={() => setSelectedCity(null)} locale={locale} />
         )}
       </AnimatePresence>
     </>

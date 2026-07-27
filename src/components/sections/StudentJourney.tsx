@@ -4,6 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { gsap, ScrollTrigger } from "@/lib/gsap";
 import { buttonVariants } from "@/components/ui/Button";
+import { useLocale, type Locale } from "@/hooks/useLocale";
 
 const STAGES = [
   {
@@ -28,7 +29,55 @@ const STAGES = [
   },
 ] as const;
 
+const copy: Record<Locale, {
+  stage: string;
+  dreamBefore: string;
+  dreamAfter: string;
+  problemBefore: string;
+  problemAfter: string;
+  solutionAfter: string;
+  resultAfterStudents: string;
+  resultAfterCountries: string;
+  cta: string;
+}> = {
+  uz: {
+    stage: "Bosqich",
+    dreamBefore: "Har yili",
+    dreamAfter: "nafar yosh o'zbekistonlik chet elda o'qishni orzu qiladi",
+    problemBefore: "Lekin",
+    problemAfter: "nimadan boshlashni bilmaydi",
+    solutionAfter: "ta'lim olamiga yo'l ko'rsatuvchi hamkor",
+    resultAfterStudents: "talaba allaqachon",
+    resultAfterCountries: "davlatda o'qimoqda",
+    cta: "Keyingisi bo'lish →",
+  },
+  ru: {
+    stage: "Этап",
+    dreamBefore: "Каждый год",
+    dreamAfter: "молодых узбекистанцев мечтают учиться за рубежом",
+    problemBefore: "Но",
+    problemAfter: "не знают с чего начать",
+    solutionAfter: "проводник в мир образования",
+    resultAfterStudents: "студентов уже учатся в",
+    resultAfterCountries: "странах мира",
+    cta: "Стать следующим →",
+  },
+  en: {
+    stage: "Stage",
+    dreamBefore: "Every year",
+    dreamAfter: "young Uzbeks dream of studying abroad",
+    problemBefore: "But",
+    problemAfter: "do not know where to start",
+    solutionAfter: "your guide to global education",
+    resultAfterStudents: "students already study in",
+    resultAfterCountries: "countries worldwide",
+    cta: "Become next →",
+  },
+};
+
 export function StudentJourney() {
+  const locale = useLocale();
+  const t = copy[locale];
   const [isMobile, setIsMobile] = React.useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = React.useState(false);
   const [stage, setStage] = React.useState(0);
@@ -177,8 +226,13 @@ export function StudentJourney() {
               style={{ backgroundColor: s.bg }}
             >
               <div className="max-w-[800px]">
-                <div className="text-sm font-bold text-brand">Этап {idx + 1}</div>
-                <h3 className="mt-4 text-4xl font-extrabold leading-tight text-primary">{s.title.replace(/\[|\]/g, "")}</h3>
+                <div className="text-sm font-bold text-brand">{t.stage} {idx + 1}</div>
+                <h3 className="mt-4 text-4xl font-extrabold leading-tight text-primary">
+                  {idx === 0 && `${t.dreamBefore} 35000 ${t.dreamAfter}`}
+                  {idx === 1 && `${t.problemBefore} 73% ${t.problemAfter}`}
+                  {idx === 2 && `Studify - ${t.solutionAfter}`}
+                  {idx === 3 && `500+ ${t.resultAfterStudents} 12 ${t.resultAfterCountries}`}
+                </h3>
               </div>
             </article>
           ))}
@@ -206,7 +260,7 @@ export function StudentJourney() {
             {stage === 0 && (
               <div data-stage="0">
                 <h2 className="text-5xl font-extrabold leading-tight text-primary lg:text-7xl">
-                  Каждый год <span ref={numberMainRef} className="text-brand">0</span> молодых узбекистанцев мечтают учиться за рубежом
+                  {t.dreamBefore} <span ref={numberMainRef} className="text-brand">0</span> {t.dreamAfter}
                 </h2>
                 <div className="mx-auto mt-10 flex w-full max-w-[340px] flex-wrap justify-center gap-2">
                   {Array.from({ length: 20 }).map((_, i) => (
@@ -219,7 +273,7 @@ export function StudentJourney() {
             {stage === 1 && (
               <div data-stage="1">
                 <h2 className="text-5xl font-extrabold leading-tight text-primary lg:text-7xl">
-                  Но <span ref={numberMainRef} className="text-brand">0%</span> не знают с чего начать
+                  {t.problemBefore} <span ref={numberMainRef} className="text-brand">0%</span> {t.problemAfter}
                 </h2>
                 <svg viewBox="0 0 320 90" className="mx-auto mt-10 h-20 w-[320px]">
                   <path ref={linePathRef} d="M10,70 C60,10 130,85 180,35 C220,0 280,70 310,20" stroke="#C4B6A8" strokeWidth="4" fill="none" strokeLinecap="round" />
@@ -230,7 +284,7 @@ export function StudentJourney() {
             {stage === 2 && (
               <div data-stage="2">
                 <h2 className="text-5xl font-extrabold leading-tight text-primary lg:text-7xl">
-                  <span className="text-brand">Studify</span> — проводник в мир образования
+                  <span className="text-brand">Studify</span> - {t.solutionAfter}
                 </h2>
                 <svg viewBox="0 0 320 90" className="mx-auto mt-10 h-20 w-[320px]">
                   <path ref={straightPathRef} d="M10,45 L290,45" stroke="#FF8225" strokeWidth="5" fill="none" strokeLinecap="round" />
@@ -242,8 +296,8 @@ export function StudentJourney() {
             {stage === 3 && (
               <div data-stage="3">
                 <h2 className="text-5xl font-extrabold leading-tight text-primary lg:text-7xl">
-                  <span ref={numberMainRef} className="text-brand">0+</span> студентов уже учатся в{" "}
-                  <span ref={numberSecondaryRef} className="text-brand">0</span> странах мира
+                  <span ref={numberMainRef} className="text-brand">0+</span> {t.resultAfterStudents}{" "}
+                  <span ref={numberSecondaryRef} className="text-brand">0</span> {t.resultAfterCountries}
                 </h2>
                 <div ref={flagRowRef} className="mt-10 flex items-center justify-center gap-3">
                   {["🇰🇷", "🇹🇷", "🇬🇧", "🇲🇾", "🇫🇷", "🇩🇪"].map((flag) => (
@@ -257,7 +311,7 @@ export function StudentJourney() {
                   href="/quiz"
                   className={`${buttonVariants({ size: "lg", className: "mt-10 px-10" })}`}
                 >
-                  Стать следующим →
+                  {t.cta}
                 </Link>
               </div>
             )}

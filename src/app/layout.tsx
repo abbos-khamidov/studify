@@ -5,6 +5,7 @@ import "./globals.css";
 import { Navbar } from "@/components/sections/Navbar";
 import { Footer } from "@/components/sections/Footer";
 import { LenisProvider } from "@/components/providers/LenisProvider";
+import { LocaleDomTranslator } from "@/components/providers/LocaleDomTranslator";
 
 const ChatWidget = dynamic(() => import("@/components/sections/ChatWidget").then((mod) => mod.ChatWidget), {
   ssr: false,
@@ -12,16 +13,67 @@ const ChatWidget = dynamic(() => import("@/components/sections/ChatWidget").then
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://studify.uz"),
-  title: "Studify — Учись за рубежом | Поступление в университеты мира из Узбекистана",
+  title: {
+    default: "Studify — обучение за рубежом после школы | Поступление в университеты",
+    template: "%s | Studify",
+  },
   description:
-    "Подберём университет, оформим документы и подготовим к поступлению. 200+ вузов в 12 странах. 95% зачислений.",
+    "Studify помогает поступить в университет за рубежом после школы: подбор страны и вуза, документы, гранты, виза и сопровождение до зачисления.",
+  keywords: [
+    "Studify",
+    "Стадифай",
+    "обучение за рубежом",
+    "учеба за границей",
+    "университет после школы",
+    "поступить в университет за рубежом",
+    "образование за рубежом из Узбекистана",
+    "поступление в зарубежные вузы",
+    "подбор университета за границей",
+    "гранты на обучение за рубежом",
+    "учеба в Корее",
+    "учеба в Германии",
+    "учеба в Великобритании",
+    "университеты после 11 класса",
+  ],
+  alternates: {
+    canonical: "/",
+  },
+  icons: {
+    icon: [
+      { url: "/favicon.ico", type: "image/x-icon" },
+      { url: "/favicon.png", type: "image/png" },
+      { url: "/icon.png", type: "image/png" },
+    ],
+    apple: [{ url: "/apple-icon.png", type: "image/png" }],
+    shortcut: ["/favicon.png"],
+  },
+  manifest: "/manifest.webmanifest",
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
   openGraph: {
-    title: "Studify — Учись за рубежом | Поступление в университеты мира из Узбекистана",
+    title: "Studify — обучение за рубежом после школы",
     description:
-      "Подберём университет, оформим документы и подготовим к поступлению. 200+ вузов в 12 странах. 95% зачислений.",
+      "Подбор университета, оформление документов, гранты и сопровождение до зачисления в зарубежный вуз.",
+    url: "https://studify.uz",
+    siteName: "Studify",
     images: [{ url: "/og-placeholder.svg", width: 1200, height: 630, alt: "Studify" }],
     locale: "ru_RU",
     type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Studify — обучение за рубежом после школы",
+    description: "Помогаем поступить в университет за рубежом из Узбекистана.",
+    images: ["/og-placeholder.svg"],
   },
 };
 
@@ -32,23 +84,38 @@ export default function RootLayout({
 }>) {
   const organizationSchema = {
     "@context": "https://schema.org",
-    "@type": "Organization",
+    "@type": "EducationalOrganization",
     name: "Studify",
+    alternateName: ["Стадифай", "Studify Uzbekistan"],
     url: "https://studify.uz",
     telephone: "+998939492000",
     description:
-      "Подберём университет, оформим документы и подготовим к поступлению. 200+ вузов в 12 странах. 95% зачислений.",
+      "Studify помогает студентам из Узбекистана поступить в университеты за рубежом после школы: подбор страны, программы, документов, грантов и сопровождение до зачисления.",
     areaServed: "UZ",
+    knowsAbout: [
+      "обучение за рубежом",
+      "учеба за границей",
+      "университет после школы",
+      "поступление в зарубежные вузы",
+      "гранты на обучение",
+    ],
+    sameAs: ["https://t.me/studify_uz"],
+    makesOffer: {
+      "@type": "Offer",
+      name: "Бесплатная консультация по обучению за рубежом",
+      category: "Education consulting",
+    },
   };
 
   return (
-    <html lang="ru" className={`${plusJakartaSans.variable} ${playfairDisplay.variable}`}>
+    <html lang="uz" className={`${plusJakartaSans.variable} ${playfairDisplay.variable}`}>
       <body className="font-sans antialiased text-primary selection:bg-brand selection:text-white">
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
         />
         <Navbar />
+        <LocaleDomTranslator />
         <main className="flex-1">
           <LenisProvider>{children}</LenisProvider>
         </main>

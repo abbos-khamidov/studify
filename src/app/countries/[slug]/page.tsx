@@ -2,7 +2,6 @@
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
 import { countries } from "@/lib/countries";
-import { Navbar } from "@/components/sections/Navbar";
 import { CountryView } from "@/components/sections/country/CountryView";
 
 interface Props {
@@ -61,7 +60,6 @@ export default function CountryPage({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <Navbar />
       <main className={`bg-gradient-to-br ${country.gradient} selection:bg-brand selection:text-white`}>
         <CountryView country={country} />
       </main>
