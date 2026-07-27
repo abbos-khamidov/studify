@@ -52,8 +52,6 @@ export default function CountryPage({ params }: Props) {
       abstract: country.description,
     },
   };
-  console.log("GRADIENT:", country.gradient);
-
   return (
     <>
       <script
